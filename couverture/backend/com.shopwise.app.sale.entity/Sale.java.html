@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Sale.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.shopwise.app.sale.entity</a> &gt; <span class="el_source">Sale.java</span></div><h1>Sale.java</h1><pre class="source lang-java linenums">package com.shopwise.app.sale.entity;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = &quot;SALES&quot;)
+<span class="fc" id="L21">public class Sale {</span>
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+<span class="fc" id="L26">    @Column(nullable = false, precision = 14, scale = 2)</span>
+    private BigDecimal total = BigDecimal.ZERO;
+
+    @Column(nullable = false)
+    private LocalDateTime soldAt;
+
+    @Column(nullable = false, length = 100)
+    private String createdBy;
+
+<span class="fc" id="L35">    @OneToMany(mappedBy = &quot;sale&quot;, cascade = CascadeType.ALL, orphanRemoval = true)</span>
+    @OrderBy(&quot;id ASC&quot;)
+    private List&lt;SaleLine&gt; lines = new ArrayList&lt;&gt;();
+
+    @PrePersist
+    void initializeDate() {
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (soldAt == null) soldAt = LocalDateTime.now();</span>
+<span class="fc" id="L42">    }</span>
+
+    public void addLine(SaleLine line) {
+<span class="fc" id="L45">        line.setSale(this);</span>
+<span class="fc" id="L46">        lines.add(line);</span>
+<span class="fc" id="L47">        total = total.add(line.getLineTotal());</span>
+<span class="fc" id="L48">    }</span>
+
+<span class="fc" id="L50">    public Long getId() { return id; }</span>
+<span class="fc" id="L51">    public BigDecimal getTotal() { return total; }</span>
+<span class="fc" id="L52">    public LocalDateTime getSoldAt() { return soldAt; }</span>
+<span class="nc" id="L53">    public void setSoldAt(LocalDateTime soldAt) { this.soldAt = soldAt; }</span>
+<span class="fc" id="L54">    public String getCreatedBy() { return createdBy; }</span>
+<span class="fc" id="L55">    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }</span>
+<span class="fc" id="L56">    public List&lt;SaleLine&gt; getLines() { return lines; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

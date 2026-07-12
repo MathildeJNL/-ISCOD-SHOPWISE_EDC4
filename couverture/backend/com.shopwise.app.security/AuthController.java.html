@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.shopwise.app.security</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">package com.shopwise.app.security;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping(&quot;/api/auth&quot;)
+public class AuthController {
+    private final AuthenticationManager authenticationManager;
+    private final TokenService tokenService;
+
+<span class="fc" id="L24">    public AuthController(AuthenticationManager authenticationManager, TokenService tokenService) {</span>
+<span class="fc" id="L25">        this.authenticationManager = authenticationManager;</span>
+<span class="fc" id="L26">        this.tokenService = tokenService;</span>
+<span class="fc" id="L27">    }</span>
+
+    @PostMapping(&quot;/login&quot;)
+    public ResponseEntity&lt;LoginResponse&gt; login(@Valid @RequestBody LoginRequest request) {
+<span class="fc" id="L31">        Authentication authentication = authenticationManager.authenticate(</span>
+<span class="fc" id="L32">                UsernamePasswordAuthenticationToken.unauthenticated(</span>
+<span class="fc" id="L33">                        request.getUsername(), request.getPassword()));</span>
+<span class="fc" id="L34">        TokenService.IssuedToken token = tokenService.issue(authentication);</span>
+<span class="fc" id="L35">        List&lt;String&gt; roles = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        for (GrantedAuthority authority : authentication.getAuthorities()) {</span>
+<span class="fc" id="L37">            roles.add(authority.getAuthority());</span>
+<span class="fc" id="L38">        }</span>
+<span class="fc" id="L39">        return ResponseEntity.ok(new LoginResponse(token.getValue(), &quot;Bearer&quot;, token.getExpiresAt(),</span>
+<span class="fc" id="L40">                authentication.getName(), roles));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

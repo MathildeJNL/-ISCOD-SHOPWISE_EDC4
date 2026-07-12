@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SaleLine.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.shopwise.app.sale.entity</a> &gt; <span class="el_source">SaleLine.java</span></div><h1>SaleLine.java</h1><pre class="source lang-java linenums">package com.shopwise.app.sale.entity;
+
+import java.math.BigDecimal;
+
+import com.shopwise.app.entity.Product;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = &quot;SALE_LINES&quot;)
+public class SaleLine {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;sale_id&quot;, nullable = false)
+    private Sale sale;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;product_id&quot;, nullable = false)
+    private Product product;
+
+    @Column(nullable = false, length = 100)
+    private String productName;
+
+    @Column(nullable = false)
+    private int quantity;
+
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal unitPrice;
+
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal lineTotal;
+
+<span class="fc" id="L44">    protected SaleLine() {}</span>
+
+<span class="fc" id="L46">    public SaleLine(Product product, int quantity) {</span>
+<span class="fc" id="L47">        this.product = product;</span>
+<span class="fc" id="L48">        this.productName = product.getName();</span>
+<span class="fc" id="L49">        this.quantity = quantity;</span>
+<span class="fc" id="L50">        this.unitPrice = product.getPrice();</span>
+<span class="fc" id="L51">        this.lineTotal = unitPrice.multiply(BigDecimal.valueOf(quantity));</span>
+<span class="fc" id="L52">    }</span>
+
+<span class="fc" id="L54">    void setSale(Sale sale) { this.sale = sale; }</span>
+<span class="nc" id="L55">    public Long getId() { return id; }</span>
+<span class="nc" id="L56">    public Sale getSale() { return sale; }</span>
+<span class="fc" id="L57">    public Product getProduct() { return product; }</span>
+<span class="fc" id="L58">    public String getProductName() { return productName; }</span>
+<span class="fc" id="L59">    public int getQuantity() { return quantity; }</span>
+<span class="fc" id="L60">    public BigDecimal getUnitPrice() { return unitPrice; }</span>
+<span class="fc" id="L61">    public BigDecimal getLineTotal() { return lineTotal; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

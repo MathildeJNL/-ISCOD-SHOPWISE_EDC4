@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1123" height="794" viewBox="0 0 1123 794">
+  <rect width="1123" height="794" fill="#f8fafc"/>
+  <style>
+    @page { size: A4 landscape; margin: 0; }
+    .title { font: 700 30px Arial, sans-serif; fill: #0f172a; }
+    .subtitle { font: 16px Arial, sans-serif; fill: #475569; }
+    .box { fill: white; stroke: #2563eb; stroke-width: 2; rx: 10; }
+    .head { fill: #2563eb; }
+    .entity { font: 700 19px Arial, sans-serif; fill: white; }
+    .field { font: 14px Consolas, monospace; fill: #0f172a; }
+    .key { font-weight: 700; fill: #b45309; }
+    .relation { fill: none; stroke: #334155; stroke-width: 2.5; }
+    .label { font: 13px Arial, sans-serif; fill: #334155; }
+    .note { font: 14px Arial, sans-serif; fill: #475569; }
+  </style>
+
+  <text x="60" y="60" class="title">ShopWise — Schéma relationnel du module Ventes</text>
+  <text x="60" y="88" class="subtitle">PostgreSQL 16 · Prix et nom figés dans la ligne de vente · Historique protégé</text>
+
+  <g transform="translate(55 170)">
+    <rect class="box" width="300" height="285"/>
+    <path class="head" d="M10 0 H290 Q300 0 300 10 V52 H0 V10 Q0 0 10 0"/>
+    <text x="150" y="33" text-anchor="middle" class="entity">PRODUCTS</text>
+    <text x="18" y="82" class="field key">PK  id BIGINT</text>
+    <text x="18" y="113" class="field">    name VARCHAR(100) NOT NULL</text>
+    <text x="18" y="144" class="field">    description VARCHAR(500)</text>
+    <text x="18" y="175" class="field">    price NUMERIC(10,2) &gt; 0</text>
+    <text x="18" y="206" class="field">    created_at TIMESTAMP</text>
+    <text x="18" y="237" class="field">    updated_at TIMESTAMP</text>
+  </g>
+
+  <g transform="translate(768 170)">
+    <rect class="box" width="300" height="245"/>
+    <path class="head" d="M10 0 H290 Q300 0 300 10 V52 H0 V10 Q0 0 10 0"/>
+    <text x="150" y="33" text-anchor="middle" class="entity">SALES</text>
+    <text x="18" y="82" class="field key">PK  id BIGINT</text>
+    <text x="18" y="113" class="field">    total NUMERIC(14,2)</text>
+    <text x="18" y="144" class="field">    sold_at TIMESTAMP</text>
+    <text x="18" y="175" class="field">    created_by VARCHAR(100)</text>
+    <text x="18" y="215" class="field">IDX (sold_at DESC, id DESC)</text>
+  </g>
+
+  <g transform="translate(382 480)">
+    <rect class="box" width="360" height="280"/>
+    <path class="head" d="M10 0 H350 Q360 0 360 10 V52 H0 V10 Q0 0 10 0"/>
+    <text x="180" y="33" text-anchor="middle" class="entity">SALE_LINES</text>
+    <text x="18" y="82" class="field key">PK  id BIGINT</text>
+    <text x="18" y="111" class="field key">FK  sale_id → SALES.id</text>
+    <text x="18" y="140" class="field key">FK  product_id → PRODUCTS.id</text>
+    <text x="18" y="169" class="field">    product_name VARCHAR(100)</text>
+    <text x="18" y="198" class="field">    quantity INTEGER [1..9999]</text>
+    <text x="18" y="227" class="field">    unit_price NUMERIC(12,2)</text>
+    <text x="18" y="256" class="field">    line_total = unit_price × quantity</text>
+  </g>
+
+  <path class="relation" d="M205 455 V620 H382"/>
+  <circle cx="205" cy="455" r="5" fill="#334155"/>
+  <path class="relation" d="M918 415 V620 H742"/>
+  <circle cx="918" cy="415" r="5" fill="#334155"/>
+  <text x="220" y="605" class="label">1 produit → 0..n lignes</text>
+  <text x="790" y="605" class="label">1 vente → 1..n lignes</text>
+
+  <text x="55" y="510" class="note">ON DELETE RESTRICT</text>
+  <text x="55" y="534" class="note">préserve les ventes historiques</text>
+  <text x="860" y="468" class="note">ON DELETE CASCADE</text>
+  <text x="860" y="492" class="note">supprime les lignes avec la vente</text>
+</svg>

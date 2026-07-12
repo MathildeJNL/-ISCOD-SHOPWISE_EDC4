@@ -1,0 +1,8 @@
+.env
+.idea/
+.vscode/
+*.iml
+app_eval/target/
+*.log
+/*.docx
+/Enonce_*.pdf

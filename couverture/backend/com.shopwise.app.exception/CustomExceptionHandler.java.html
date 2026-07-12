@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomExceptionHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.shopwise.app.exception</a> &gt; <span class="el_source">CustomExceptionHandler.java</span></div><h1>CustomExceptionHandler.java</h1><pre class="source lang-java linenums">package com.shopwise.app.exception;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+@ControllerAdvice
+<span class="fc" id="L22">public class CustomExceptionHandler {</span>
+
+<span class="fc" id="L24">    private static final Logger log = LoggerFactory.getLogger(CustomExceptionHandler.class);</span>
+	
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity&lt;ApiError&gt; handleNotFound(NotFoundException ex, HttpServletRequest request) {
+<span class="fc" id="L28">        return response(HttpStatus.NOT_FOUND, &quot;NOT_FOUND&quot;, ex.getMessage(), request, Map.of());</span>
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity&lt;ApiError&gt; handleValidationExceptions(
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
+<span class="fc" id="L34">        Map&lt;String, String&gt; errors = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L35">        ex.getBindingResult().getAllErrors().forEach(error -&gt; {</span>
+<span class="fc" id="L36">            String fieldName = ((FieldError) error).getField();</span>
+<span class="fc" id="L37">            String message = error.getDefaultMessage();</span>
+<span class="fc" id="L38">            errors.put(fieldName, message);</span>
+<span class="fc" id="L39">        });</span>
+<span class="fc" id="L40">        return response(HttpStatus.BAD_REQUEST, &quot;VALIDATION_ERROR&quot;, &quot;La requête contient des données invalides&quot;, request, errors);</span>
+    }
+
+    @ExceptionHandler({ConstraintViolationException.class, HttpMessageNotReadableException.class,
+            IllegalArgumentException.class})
+    public ResponseEntity&lt;ApiError&gt; handleBadRequest(Exception ex, HttpServletRequest request) {
+<span class="nc" id="L46">        return response(HttpStatus.BAD_REQUEST, &quot;BAD_REQUEST&quot;, &quot;La requête est invalide&quot;, request, Map.of());</span>
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity&lt;ApiError&gt; handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+<span class="nc" id="L51">        return response(HttpStatus.UNAUTHORIZED, &quot;UNAUTHORIZED&quot;, &quot;Identifiants invalides&quot;, request, Map.of());</span>
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity&lt;ApiError&gt; handleConflict(DataIntegrityViolationException ex, HttpServletRequest request) {
+<span class="nc" id="L56">        return response(HttpStatus.CONFLICT, &quot;DATA_CONFLICT&quot;, &quot;La ressource est référencée et ne peut pas être supprimée&quot;, request, Map.of());</span>
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity&lt;ApiError&gt; handleAll(Exception ex, HttpServletRequest request) {
+<span class="nc" id="L61">        log.error(&quot;Unexpected error&quot;, ex);</span>
+<span class="nc" id="L62">        return response(HttpStatus.INTERNAL_SERVER_ERROR, &quot;INTERNAL_ERROR&quot;, &quot;Une erreur inattendue est survenue&quot;, request, Map.of());</span>
+    }
+
+    private ResponseEntity&lt;ApiError&gt; response(HttpStatus status, String code, String message,
+            HttpServletRequest request, Map&lt;String, String&gt; details) {
+<span class="fc" id="L67">        ApiError error = new ApiError(code, message, java.time.Instant.now(), request.getRequestURI(), details);</span>
+<span class="fc" id="L68">        return ResponseEntity.status(status).body(error);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

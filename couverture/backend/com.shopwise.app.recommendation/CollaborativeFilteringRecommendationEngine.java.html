@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CollaborativeFilteringRecommendationEngine.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">app</a> &gt; <a href="index.source.html" class="el_package">com.shopwise.app.recommendation</a> &gt; <span class="el_source">CollaborativeFilteringRecommendationEngine.java</span></div><h1>CollaborativeFilteringRecommendationEngine.java</h1><pre class="source lang-java linenums">package com.shopwise.app.recommendation;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.shopwise.app.entity.Product;
+import com.shopwise.app.exception.NotFoundException;
+import com.shopwise.app.repository.ProductRepository;
+import com.shopwise.app.sale.entity.Sale;
+import com.shopwise.app.sale.entity.SaleLine;
+import com.shopwise.app.sale.repository.SaleRepository;
+
+@Service
+@Transactional(readOnly = true)
+public class CollaborativeFilteringRecommendationEngine implements RecommendationEngine {
+    private final ProductRepository productRepository;
+    private final SaleRepository saleRepository;
+
+    public CollaborativeFilteringRecommendationEngine(ProductRepository productRepository,
+<span class="fc" id="L27">            SaleRepository saleRepository) {</span>
+<span class="fc" id="L28">        this.productRepository = productRepository;</span>
+<span class="fc" id="L29">        this.saleRepository = saleRepository;</span>
+<span class="fc" id="L30">    }</span>
+
+    @Override
+    public List&lt;RecommendationResponse&gt; recommend(Long productId, int limit) {
+<span class="fc" id="L34">        List&lt;Product&gt; catalog = productRepository.findAll();</span>
+<span class="fc" id="L35">        Product reference = null;</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        if (productId != null) {</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">            for (Product product : catalog) {</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">                if (product.getId().equals(productId)) {</span>
+<span class="fc" id="L39">                    reference = product;</span>
+<span class="fc" id="L40">                    break;</span>
+                }
+<span class="nc" id="L42">            }</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">            if (reference == null) {</span>
+<span class="nc" id="L44">                throw new NotFoundException(&quot;Produit &quot; + productId + &quot; introuvable&quot;);</span>
+            }
+        }
+
+<span class="fc" id="L48">        List&lt;Sale&gt; sales = saleRepository.findAllWithLines();</span>
+<span class="fc" id="L49">        Map&lt;Long, Map&lt;Long, Integer&gt;&gt; vectors = buildProductVectors(sales);</span>
+<span class="fc" id="L50">        Map&lt;Long, Long&gt; popularity = buildPopularity(sales);</span>
+
+<span class="pc bpc" id="L52" title="1 of 4 branches missed.">        if (reference == null || !vectors.containsKey(reference.getId())) {</span>
+<span class="fc" id="L53">            return popularityRecommendations(catalog, popularity, productId, limit);</span>
+        }
+<span class="fc" id="L55">        return similarityRecommendations(catalog, vectors, popularity, reference, limit);</span>
+    }
+
+    private Map&lt;Long, Map&lt;Long, Integer&gt;&gt; buildProductVectors(List&lt;Sale&gt; sales) {
+<span class="fc" id="L59">        Map&lt;Long, Map&lt;Long, Integer&gt;&gt; vectors = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        for (Sale sale : sales) {</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">            for (SaleLine line : sale.getLines()) {</span>
+<span class="fc" id="L62">                Long productId = line.getProduct().getId();</span>
+<span class="fc" id="L63">                Map&lt;Long, Integer&gt; productVector = vectors.get(productId);</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">                if (productVector == null) {</span>
+<span class="fc" id="L65">                    productVector = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L66">                    vectors.put(productId, productVector);</span>
+                }
+<span class="fc" id="L68">                productVector.put(sale.getId(), line.getQuantity());</span>
+<span class="fc" id="L69">            }</span>
+<span class="fc" id="L70">        }</span>
+<span class="fc" id="L71">        return vectors;</span>
+    }
+
+    private Map&lt;Long, Long&gt; buildPopularity(List&lt;Sale&gt; sales) {
+<span class="fc" id="L75">        Map&lt;Long, Long&gt; popularity = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        for (Sale sale : sales) {</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">            for (SaleLine line : sale.getLines()) {</span>
+<span class="fc" id="L78">                popularity.merge(line.getProduct().getId(), (long) line.getQuantity(), Long::sum);</span>
+<span class="fc" id="L79">            }</span>
+<span class="fc" id="L80">        }</span>
+<span class="fc" id="L81">        return popularity;</span>
+    }
+
+    private List&lt;RecommendationResponse&gt; similarityRecommendations(List&lt;Product&gt; catalog,
+            Map&lt;Long, Map&lt;Long, Integer&gt;&gt; vectors, Map&lt;Long, Long&gt; popularity,
+            Product reference, int limit) {
+<span class="fc" id="L87">        Map&lt;Long, Integer&gt; referenceVector = vectors.get(reference.getId());</span>
+<span class="fc" id="L88">        List&lt;ScoredProduct&gt; scored = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        for (Product candidate : catalog) {</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">            if (candidate.getId().equals(reference.getId())) continue;</span>
+<span class="fc" id="L91">            double similarity = cosine(referenceVector, vectors.getOrDefault(candidate.getId(), Map.of()));</span>
+<span class="fc" id="L92">            scored.add(new ScoredProduct(candidate, similarity,</span>
+<span class="fc" id="L93">                    popularity.getOrDefault(candidate.getId(), 0L)));</span>
+<span class="fc" id="L94">        }</span>
+<span class="fc" id="L95">        scored.sort((first, second) -&gt; {</span>
+<span class="fc" id="L96">            int scoreComparison = Double.compare(second.getScore(), first.getScore());</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">            if (scoreComparison != 0) return scoreComparison;</span>
+<span class="fc" id="L98">            int popularityComparison = Long.compare(second.getPopularity(), first.getPopularity());</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            if (popularityComparison != 0) return popularityComparison;</span>
+<span class="fc" id="L100">            return first.getProduct().getName().compareTo(second.getProduct().getName());</span>
+        });
+
+<span class="fc" id="L103">        List&lt;RecommendationResponse&gt; responses = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L104">        int numberOfResults = Math.min(limit, scored.size());</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        for (int i = 0; i &lt; numberOfResults; i++) {</span>
+<span class="fc" id="L106">            ScoredProduct item = scored.get(i);</span>
+<span class="fc" id="L107">            String reason = &quot;Meilleure vente proposée en repli&quot;;</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">            if (item.getScore() &gt; 0) {</span>
+<span class="fc" id="L109">                reason = &quot;Souvent acheté dans les mêmes paniers que &quot; + reference.getName();</span>
+            }
+<span class="fc" id="L111">            responses.add(new RecommendationResponse(</span>
+<span class="fc" id="L112">                    item.getProduct().getId(), item.getProduct().getName(),</span>
+<span class="fc" id="L113">                    round(item.getScore()), reason));</span>
+        }
+<span class="fc" id="L115">        return responses;</span>
+    }
+
+    private List&lt;RecommendationResponse&gt; popularityRecommendations(List&lt;Product&gt; catalog,
+            Map&lt;Long, Long&gt; popularity, Long excludedProductId, int limit) {
+<span class="fc" id="L120">        long max = 0;</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">        for (Long quantity : popularity.values()) {</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">            if (quantity &gt; max) max = quantity;</span>
+<span class="nc" id="L123">        }</span>
+
+<span class="fc" id="L125">        List&lt;Product&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        for (Product product : catalog) {</span>
+<span class="pc bpc" id="L127" title="3 of 4 branches missed.">            if (excludedProductId == null || !product.getId().equals(excludedProductId)) {</span>
+<span class="fc" id="L128">                candidates.add(product);</span>
+            }
+<span class="fc" id="L130">        }</span>
+<span class="fc" id="L131">        candidates.sort((first, second) -&gt; {</span>
+<span class="fc" id="L132">            long firstQuantity = popularity.getOrDefault(first.getId(), 0L);</span>
+<span class="fc" id="L133">            long secondQuantity = popularity.getOrDefault(second.getId(), 0L);</span>
+<span class="fc" id="L134">            int quantityComparison = Long.compare(secondQuantity, firstQuantity);</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">            if (quantityComparison != 0) return quantityComparison;</span>
+<span class="fc" id="L136">            return first.getName().compareTo(second.getName());</span>
+        });
+
+<span class="fc" id="L139">        List&lt;RecommendationResponse&gt; responses = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L140">        int numberOfResults = Math.min(limit, candidates.size());</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">        for (int i = 0; i &lt; numberOfResults; i++) {</span>
+<span class="fc" id="L142">            Product product = candidates.get(i);</span>
+<span class="fc" id="L143">            long quantity = popularity.getOrDefault(product.getId(), 0L);</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">            double score = max == 0 ? 0 : quantity / (double) max;</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">            String reason = max == 0</span>
+<span class="fc" id="L146">                    ? &quot;Nouveau produit du catalogue&quot;</span>
+<span class="pc" id="L147">                    : &quot;Produit parmi les meilleures ventes&quot;;</span>
+<span class="fc" id="L148">            responses.add(new RecommendationResponse(</span>
+<span class="fc" id="L149">                    product.getId(), product.getName(), round(score), reason));</span>
+        }
+<span class="fc" id="L151">        return responses;</span>
+    }
+
+    static double cosine(Map&lt;Long, Integer&gt; left, Map&lt;Long, Integer&gt; right) {
+<span class="pc bpc" id="L155" title="1 of 4 branches missed.">        if (left.isEmpty() || right.isEmpty()) return 0;</span>
+<span class="fc" id="L156">        double dot = 0;</span>
+<span class="fc" id="L157">        double leftNorm = 0;</span>
+<span class="fc" id="L158">        double rightNorm = 0;</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        for (int value : left.values()) leftNorm += (double) value * value;</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        for (int value : right.values()) rightNorm += (double) value * value;</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        for (Map.Entry&lt;Long, Integer&gt; entry : left.entrySet()) {</span>
+<span class="fc" id="L162">            dot += (double) entry.getValue() * right.getOrDefault(entry.getKey(), 0);</span>
+<span class="fc" id="L163">        }</span>
+<span class="fc" id="L164">        return dot / (Math.sqrt(leftNorm) * Math.sqrt(rightNorm));</span>
+    }
+
+    private static double round(double value) {
+<span class="fc" id="L168">        return BigDecimal.valueOf(value).setScale(4, RoundingMode.HALF_UP).doubleValue();</span>
+    }
+
+    private static class ScoredProduct {
+        private final Product product;
+        private final double score;
+        private final long popularity;
+
+<span class="fc" id="L176">        ScoredProduct(Product product, double score, long popularity) {</span>
+<span class="fc" id="L177">            this.product = product;</span>
+<span class="fc" id="L178">            this.score = score;</span>
+<span class="fc" id="L179">            this.popularity = popularity;</span>
+<span class="fc" id="L180">        }</span>
+
+<span class="fc" id="L182">        Product getProduct() { return product; }</span>
+<span class="fc" id="L183">        double getScore() { return score; }</span>
+<span class="fc" id="L184">        long getPopularity() { return popularity; }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
