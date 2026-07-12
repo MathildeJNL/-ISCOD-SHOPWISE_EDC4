@@ -35,7 +35,7 @@ public class AuthController {
 <span class="fc" id="L35">        List&lt;String&gt; roles = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L36" title="All 2 branches covered.">        for (GrantedAuthority authority : authentication.getAuthorities()) {</span>
 <span class="fc" id="L37">            roles.add(authority.getAuthority());</span>
-<span class="fc" id="L38">        }</span>
+        }
 <span class="fc" id="L39">        return ResponseEntity.ok(new LoginResponse(token.getValue(), &quot;Bearer&quot;, token.getExpiresAt(),</span>
 <span class="fc" id="L40">                authentication.getName(), roles));</span>
     }

@@ -26,6 +26,7 @@ public class TokenService {
     }
 
     public IssuedToken issue(Authentication authentication) {
+        // Le token contient 32 octets aléatoires et ne contient aucune donnée utilisateur.
         byte[] randomBytes = new byte[32];
         secureRandom.nextBytes(randomBytes);
         String value = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
@@ -39,6 +40,7 @@ public class TokenService {
     }
 
     public Optional<Authentication> authenticate(String token) {
+        // On cherche le token puis on vérifie sa date d'expiration.
         TokenSession session = sessions.get(token);
         if (session == null) {
             return Optional.empty();

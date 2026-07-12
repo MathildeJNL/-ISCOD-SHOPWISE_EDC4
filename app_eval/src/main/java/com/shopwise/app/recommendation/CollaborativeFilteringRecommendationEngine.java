@@ -45,7 +45,7 @@ public class CollaborativeFilteringRecommendationEngine implements Recommendatio
             }
         }
 
-        List<Sale> sales = saleRepository.findAllWithLines();
+        List<Sale> sales = saleRepository.findAll();
         Map<Long, Map<Long, Integer>> vectors = buildProductVectors(sales);
         Map<Long, Long> popularity = buildPopularity(sales);
 
@@ -56,6 +56,7 @@ public class CollaborativeFilteringRecommendationEngine implements Recommendatio
     }
 
     private Map<Long, Map<Long, Integer>> buildProductVectors(List<Sale> sales) {
+        // Pour chaque produit, on garde la quantité vendue dans chaque vente.
         Map<Long, Map<Long, Integer>> vectors = new HashMap<>();
         for (Sale sale : sales) {
             for (SaleLine line : sale.getLines()) {
@@ -152,6 +153,7 @@ public class CollaborativeFilteringRecommendationEngine implements Recommendatio
     }
 
     static double cosine(Map<Long, Integer> left, Map<Long, Integer> right) {
+        // Plus le résultat est proche de 1, plus les deux produits sont vendus ensemble.
         if (left.isEmpty() || right.isEmpty()) return 0;
         double dot = 0;
         double leftNorm = 0;
