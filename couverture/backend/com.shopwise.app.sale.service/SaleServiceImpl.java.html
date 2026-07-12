@@ -38,22 +38,22 @@ public class SaleServiceImpl implements SaleService {
 <span class="fc" id="L38">            int newQuantity = currentQuantity + item.getQuantity();</span>
 <span class="pc bpc" id="L39" title="1 of 2 branches missed.">            if (newQuantity &gt; 9999) {</span>
 <span class="nc" id="L40">                throw new IllegalArgumentException(</span>
-                        &quot;La quantité cumulée d'un produit ne peut pas dépasser 9999&quot;);
+<span class="nc" id="L41">                        &quot;La quantité cumulée d'un produit ne peut pas dépasser 9999&quot;);</span>
             }
 <span class="fc" id="L43">            quantities.put(item.getProductId(), newQuantity);</span>
-<span class="fc" id="L44">        }</span>
+        }
 
 <span class="fc" id="L46">        Map&lt;Long, Product&gt; products = new LinkedHashMap&lt;&gt;();</span>
 <span class="fc bfc" id="L47" title="All 2 branches covered.">        for (Product product : productRepository.findAllById(quantities.keySet())) {</span>
 <span class="fc" id="L48">            products.put(product.getId(), product);</span>
-<span class="fc" id="L49">        }</span>
+        }
 
 <span class="fc" id="L51">        List&lt;Long&gt; missingIds = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L52" title="All 2 branches covered.">        for (Long productId : quantities.keySet()) {</span>
 <span class="fc bfc" id="L53" title="All 2 branches covered.">            if (!products.containsKey(productId)) {</span>
 <span class="fc" id="L54">                missingIds.add(productId);</span>
             }
-<span class="fc" id="L56">        }</span>
+        }
 <span class="fc bfc" id="L57" title="All 2 branches covered.">        if (!missingIds.isEmpty()) {</span>
 <span class="fc" id="L58">            throw new NotFoundException(&quot;Produits introuvables : &quot; + missingIds);</span>
         }
@@ -63,7 +63,7 @@ public class SaleServiceImpl implements SaleService {
 <span class="fc bfc" id="L63" title="All 2 branches covered.">        for (Map.Entry&lt;Long, Integer&gt; entry : quantities.entrySet()) {</span>
 <span class="fc" id="L64">            Product product = products.get(entry.getKey());</span>
 <span class="fc" id="L65">            sale.addLine(new SaleLine(product, entry.getValue()));</span>
-<span class="fc" id="L66">        }</span>
+        }
 <span class="fc" id="L67">        return toResponse(saleRepository.save(sale));</span>
     }
 
@@ -73,7 +73,7 @@ public class SaleServiceImpl implements SaleService {
 <span class="nc" id="L73">        List&lt;SaleResponse&gt; responses = new ArrayList&lt;&gt;();</span>
 <span class="nc bnc" id="L74" title="All 2 branches missed.">        for (Sale sale : saleRepository.findAllByOrderBySoldAtDescIdDesc()) {</span>
 <span class="nc" id="L75">            responses.add(toResponse(sale));</span>
-<span class="nc" id="L76">        }</span>
+        }
 <span class="nc" id="L77">        return responses;</span>
     }
 
@@ -96,7 +96,7 @@ public class SaleServiceImpl implements SaleService {
 <span class="fc" id="L96">                    line.getUnitPrice(),</span>
 <span class="fc" id="L97">                    line.getLineTotal());</span>
 <span class="fc" id="L98">            lines.add(response);</span>
-<span class="fc" id="L99">        }</span>
+        }
 <span class="fc" id="L100">        return new SaleResponse(sale.getId(), sale.getSoldAt(), sale.getCreatedBy(), sale.getTotal(), lines);</span>
     }
 }

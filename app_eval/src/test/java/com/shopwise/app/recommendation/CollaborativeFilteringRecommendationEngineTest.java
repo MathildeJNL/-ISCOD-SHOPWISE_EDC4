@@ -43,7 +43,7 @@ class CollaborativeFilteringRecommendationEngineTest {
         Product zebra = product(1L, "Zebra");
         Product alpha = product(2L, "Alpha");
         when(productRepository.findAll()).thenReturn(List.of(zebra, alpha));
-        when(saleRepository.findAllWithLines()).thenReturn(List.of());
+        when(saleRepository.findAll()).thenReturn(List.of());
 
         var recommendations = engine.recommend(null, 2);
 
